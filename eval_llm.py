@@ -109,6 +109,13 @@ def main():
     # 推荐值：【0.9】减少跑偏和重复时使用；【0.95】当前常规测试可用。
     parser.add_argument('--top_p', default=0.95, type=float, help="nucleus采样阈值（0-1）")
 
+    # 参数名：重复惩罚系数
+    # 作用：降低已经生成过的 token 再次被选中的概率，用于缓解复读和循环输出。
+    # 范围：【1.0，1.05，1.1，1.15，1.2】
+    # 影响：越大越不容易重复，但太大可能让回答变僵、用词不自然；1.0 表示不做重复惩罚。
+    # 推荐值：【1.1】轻微重复时使用；【1.15】重复明显时使用。
+    parser.add_argument('--repetition_penalty', default=1.0, type=float, help="重复惩罚系数（>=1，越大越不容易重复）")
+
     # 参数名：是否开启思考模式
     # 作用：控制聊天模板里是否启用自适应思考模式。
     # 范围：【0，1】
@@ -173,7 +180,7 @@ def main():
             inputs=inputs["input_ids"], attention_mask=inputs["attention_mask"],
             max_new_tokens=args.max_new_tokens, do_sample=True, streamer=streamer,
             pad_token_id=tokenizer.pad_token_id, eos_token_id=tokenizer.eos_token_id,
-            top_p=args.top_p, temperature=args.temperature, repetition_penalty=1
+            top_p=args.top_p, temperature=args.temperature, repetition_penalty=args.repetition_penalty
         )
         response = tokenizer.decode(generated_ids[0][len(inputs["input_ids"][0]):], skip_special_tokens=True)
         conversation.append({"role": "assistant", "content": response})
